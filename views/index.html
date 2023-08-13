@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <style>
+       
+
+       body{
+            background-color: aqua;
+        }
+        header{
+            margin-top: 2%;
+        }
+        #msgarea {
+  height: 480px; /* Set an appropriate height */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+    </style>
+    <title>Chat App</title>
+</head>
+<body>
+    <h1 style="text-align: center;">Chat App</h1>
+    <br>
+    <div class="row">
+        <div class="col-4">
+            
+            <button id="createGroupBtn" style="width: 100%; margin: 10px;" class="btn btn-info">Create Group</button>
+            <br>
+            <h3 style="text-align: center;">Groups</h3>
+            <br>
+            <div id="GroupList"></div>
+        </div>
+        <div style=" background-color: bisque; " class="col-7">
+            <div class="row" >
+                <h3 style="text-align: center; width: 100%;" id="grpName">Public Group</h3>
+            </div>
+            
+            <div  id="msgarea">
+        
+
+            </div>
+        </div>
+    </div>
+    <!-- Pop code for Group Create-->
+    <div class="modal" tabindex="-1" role="dialog" id="createGroupModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Group</h5>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="groupNameInput" class="form-control" placeholder="Enter group name">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"  id="createGroupCancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="createGroupSubmit">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop code for Invite-->
+    <div class="modal" tabindex="-1" role="dialog" id="createInvite">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Invite</h5>
+                </div>
+                <div class="modal-body" id="EmailInviteCheck">
+                    <input type="text" id="EmailInvite" class="form-control" placeholder="Email">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"  id="createInviteCancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="createInviteSubmit">Invite</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="fixed-bottom d-flex justify-content-center">
+        <div style="margin-left: 20%; margin-right: 20%; background-color: rgb(0, 0, 0); " class="input-group w-auto">
+            <input
+              type="text"
+              id="msgField"
+              class="form-control"
+              placeholder="Enter the message"
+            />
+            <button id="sendbtn" class="btn btn-primary" type="button" id="button-addon1" data-mdb-ripple-color="dark">
+              Send
+            </button>
+          </div>
+    </div>
+
+    <!-- Popup for show Members -->
+    <div class="modal" tabindex="-1" role="dialog" id="membersModal">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Group Members</h5>
+            </div>
+            <div class="modal-body" id="membersList">
+              <!-- Member names will be added here dynamically -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" id="closeMembersModal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="index.js"></script>
+
+</body>
+</html>

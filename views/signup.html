@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <style>
+        header{
+            margin-top: 2%;
+        }
+        *{
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            outline: none;
+            
+        }
+
+        body{
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background-color: aqua;
+            background: linear-gradient(-45deg,rgb(79, 218, 253),white);
+            
+            
+            
+            
+        }
+
+        .box-area {
+            box-shadow: 20px 20px lightblue;
+            border-radius: 5px;
+        }
+        #page{
+            align-items: center;
+            text-align: center;
+        }
+    </style>
+    <title>Whatsapp</title>
+</head>
+<body>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+
+        <div class="row border rounded-5 p-3 bg-white shadow box-area">
+
+            <div class="outer align-items-center">
+                <form id="signupForm">
+                    <div id="page">
+                        <label style=" color: black; font-weight: bold;">SignUp</label>
+                        <div class="element">
+                            <input id="name" type="text" placeholder="Name" required>
+                            
+                        </div>
+                        <br>
+                        <div class="element" id="emailarea">
+                            <input id="email" type="text" placeholder="Email" required>
+                        
+                            
+                        </div>
+                        <br>
+                        <div class="element" id="phonearea">
+                            <input id="phone" type="text" placeholder="Phone" required>
+                            
+                            
+                        </div>
+                        <br>
+                        <div class="element">
+                            <input id="password" type="password" placeholder="Password" required>
+                            
+                        </div>
+                        <br>
+                        <input type="submit" class="btn btn-dark" value="SignUp">
+                        <br>
+                        <a href="./login.html">Already have an account click to Login</a>
+                        
+                    </div>
+
+                    
+
+                </form>
+            </div>
+
+
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="signup.js"></script>
+    
+</body>
+</html>
