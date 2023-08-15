@@ -17,7 +17,7 @@ async function submitForm(e){
         password:password.value
     }
     console.log(myobj)
-    const res = await axios.post('http://localhost:3000/',myobj)
+    const res = await axios.post('http://52.201.83.163:3000/',myobj)
     console.log(res.status,res)
     if(document.getElementById('emailcheck')){
         document.getElementById('emailcheck').remove()

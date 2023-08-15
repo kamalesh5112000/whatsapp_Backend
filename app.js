@@ -23,7 +23,7 @@ const app = express();
 const server = http.createServer(app); // Create an HTTP server
 const io = socketIo(server,{
     cors:{
-        origin:['http://localhost:3000'],
+        origin:['http://52.201.83.163:3000'],
     },
 });
 

@@ -10,6 +10,8 @@ const groupNameInput = document.getElementById('groupNameInput');
 const createGroupSubmit = document.getElementById('createGroupSubmit');
 const createGroupCancel=document.getElementById('createGroupCancel');
 const buttonListDiv = document.getElementById('GroupList');
+const attachFileBtn = document.getElementById('attachFileBtn');
+const fileInput = document.getElementById('fileInput');
 let groupid=null;
 let groupN='Public Group'
 
@@ -21,11 +23,28 @@ const EmailInviteCheck=document.getElementById('EmailInviteCheck');
 const grpTitle=document.getElementById('grpName');
 
 
-const socket=io.connect('http://localhost:3000')
+const socket=io.connect('http://52.201.83.163:3000')
 
 socket.on("receiveMessage", (data) => {
     display();
   });
+
+let selectedFile = null;
+
+  // Handle attaching a file
+attachFileBtn.addEventListener('click', () => {
+    fileInput.click();
+});
+  
+  // Handle selected file
+fileInput.addEventListener('change', (event) => {
+    selectedFile = event.target.files[0];
+    if (selectedFile) {
+        msg.value = selectedFile.name; // Set the file name as the message
+    }
+});
+
+
 createInviteCancel.addEventListener('click',()=>{
     createInvite.style.display = 'none';
 })
@@ -62,7 +81,7 @@ async function showMembers(e) {
 
     // Populate the member list
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://localhost:3000/getgroupMembers`,{headers:{"Authorization":token},params:grp});
+    const res = await axios.get(`http://52.201.83.163:3000/getgroupMembers`,{headers:{"Authorization":token},params:grp});
     
     let isUserAdmin=true;
     for(let j=0;j<res.data.data.length;j++){
@@ -138,7 +157,7 @@ async function makeAdmin(e) {
     // Logic to make the member an admin
     
     
-    const res= await axios.post('http://localhost:3000/makeAdmin',{userId:userId,groupId:groupId})
+    const res= await axios.post('http://52.201.83.163:3000/makeAdmin',{userId:userId,groupId:groupId})
     
     membersModal.style.display = 'none';
 }
@@ -149,7 +168,7 @@ async function deleteMember(e) {
     const groupId=button.getAttribute('groupId')
     // Logic to delete the member
     console.log(userId,groupId)
-    const res= await axios.post('http://localhost:3000/deletegroupmember',{userId:userId,groupId:groupId})
+    const res= await axios.post('http://52.201.83.163:3000/deletegroupmember',{userId:userId,groupId:groupId})
     
     membersModal.style.display = 'none';
 }
@@ -214,7 +233,7 @@ createGroupSubmit.addEventListener('click', async() => {
         console.log('Group name:', groupName);
         // Close the moda
         const token = localStorage.getItem('token');
-        const res = await axios.post('http://localhost:3000/addgroup',{groupName:groupName},{headers:{"Authorization":token}});
+        const res = await axios.post('http://52.201.83.163:3000/addgroup',{groupName:groupName},{headers:{"Authorization":token}});
 
         createGroupModal.style.display = 'none';
         groupdisplay()
@@ -224,7 +243,7 @@ createGroupSubmit.addEventListener('click', async() => {
 
 createInviteSubmit.addEventListener('click',async()=>{
     console.log("Email :",InviteEmail.value," Group ID :",groupid)
-    const res = await axios.post('http://localhost:3000/addGroupUser',{userMail:InviteEmail.value,groupId:groupid});
+    const res = await axios.post('http://52.201.83.163:3000/addGroupUser',{userMail:InviteEmail.value,groupId:groupid});
     console.log(res)
     if(res.status==203){
         console.log(EmailInviteCheck.getElementsByTagName('p'))
@@ -280,17 +299,38 @@ async function sendMessage(e){
         groupid:groupid
     }
     const token = localStorage.getItem('token');
-    const res = await axios.post('http://localhost:3000/addmsg',{msg:testmsg,groupid:groupid},{headers:{"Authorization":token}});
-    socket.emit("sendMessage",myobj);
     
-    display();
+    try{
+        if (selectedFile) {
+            const formData = new FormData();
+            formData.append('myfile', selectedFile);
+            formData.append('groupId', groupid);
+            const res = await axios.post('http://52.201.83.163:3000/sendfile',formData,{headers:{"Authorization":token}});
+            console.log(res)
+            display();
+        }else{
+            
+            const res = await axios.post('http://52.201.83.163:3000/addmsg',myobj,{headers:{"Authorization":token}});
+            selectedFile = null;
+            
+            socket.emit("sendMessage",myobj);
+            
+            display();
+
+        }
+        
+
+    }catch(err){
+        console.log(err)
+    }
+    
 }
 
 groupdisplay()
 async function groupdisplay(){
     buttonListDiv.innerHTML='';
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://localhost:3000/getgroups`,{headers:{"Authorization":token}});
+    const res = await axios.get(`http://52.201.83.163:3000/getgroups`,{headers:{"Authorization":token}});
     createGroupList(res.data)
 
 }
@@ -339,7 +379,7 @@ async function display(){
         let grp={
             groupId:groupid
         }
-        const res = await axios.get(`http://localhost:3000/getmsg?lastMsgId=${lastMessageId}`,{headers:{"Authorization":token},params:grp});
+        const res = await axios.get(`http://52.201.83.163:3000/getmsg?lastMsgId=${lastMessageId}`,{headers:{"Authorization":token},params:grp});
         if(res.data.chat.length>0){
             
             
@@ -370,29 +410,62 @@ async function display(){
     
 }
 function showchat(obj){
-    for(let i=0;i<obj.chat.length;i++){
-        if(obj.chat[i].userId==obj.cid){
+    for (let i = 0; i < obj.chat.length; i++) {
+        const chatEntry = obj.chat[i];
+        const chatMessage = `${chatEntry.userName} : ${chatEntry.message}`;
+    
+        if (chatEntry.userId === obj.cid) {
             var para2 = document.createElement("div");
-            para2.style.backgroundColor= "blue";
-            para2.style.padding ="10px";
-            para2.style.float ="right";
+            para2.style.backgroundColor = "blue";
+            para2.style.padding = "10px";
+            para2.style.float = "right";
             para2.style.clear = "both";
             para2.style.margin = "5px";
-            para2.appendChild(document.createTextNode(`${obj.chat[i].userName} : ${obj.chat[i].message}`));
-            msgarea.appendChild(para2)
-        }else{
+    
+            // Check if the message is a download link
+            if (isDownloadLink(chatEntry.message)) {
+                const downloadLink = createDownloadLink(chatEntry.message);
+                para2.appendChild(downloadLink);
+            } else {
+                para2.appendChild(document.createTextNode(chatMessage));
+            }
+    
+            msgarea.appendChild(para2);
+        } else {
             var para1 = document.createElement("div");
-            para1.style.backgroundColor= "gold";
-            para1.style.padding ="10px";
-            para1.style.float ="left";
+            para1.style.backgroundColor = "gold";
+            para1.style.padding = "10px";
+            para1.style.float = "left";
             para1.style.clear = "both";
             para1.style.margin = "5px";
-            para1.appendChild(document.createTextNode(`${obj.chat[i].userName} : ${obj.chat[i].message}`));
-            msgarea.appendChild(para1)
-
+    
+            // Check if the message is a download link
+            if (isDownloadLink(chatEntry.message)) {
+                const downloadLink = createDownloadLink(chatEntry.message);
+                para1.appendChild(downloadLink);
+            } else {
+                para1.appendChild(document.createTextNode(chatMessage));
+            }
+    
+            msgarea.appendChild(para1);
         }
     }
 
+}
+function isDownloadLink(message) {
+    const urlPattern = /^https?:\/\/\S+/i;
+    return urlPattern.test(message);
+}
+
+// Function to create a download link element
+function createDownloadLink(url) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank"; // Open in a new tab
+    const fileName = url.substring(url.lastIndexOf('/') + 1);
+    link.textContent = `Download ${fileName}`;
+
+    return link;
 }
 function loadFromLS(){
 
