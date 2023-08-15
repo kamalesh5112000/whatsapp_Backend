@@ -3,6 +3,10 @@ const dotenv=require('dotenv');
 dotenv.config();
 const cors = require('cors');
 
+const http = require('http'); // Import the 'http' module
+const socketIo = require('socket.io');
+
+
 const path = require('path');
 const fs=require('fs');
 const bodyParser=require('body-parser');
@@ -16,6 +20,12 @@ const chatRoute=require('./routes/chatRoute');
 const groupRoute=require('./routes/groupRoute');
 
 const app = express();
+const server = http.createServer(app); // Create an HTTP server
+const io = socketIo(server,{
+    cors:{
+        origin:['http://localhost:3000'],
+    },
+});
 
 app.use(bodyParser.json({ extended: false }));
 app.use(cors({
@@ -27,6 +37,7 @@ app.use(userRoute)
 app.use(chatRoute)
 app.use(groupRoute)
 
+app.use('/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
 
 app.use((req,res)=>{
     
@@ -48,5 +59,27 @@ userGroup.belongsTo(groups);
 
 sequelize.sync().then(result => {
     //console.log(result);
-    app.listen(process.env.PORT || 3000);
+    server.listen(process.env.PORT || 3000, () => {
+        console.log('Server listening on port 3000');
+    });
 }).catch(err => console.log(err));
+
+io.on('connection', (socket) => {
+    console.log("Socket Id :",socket.id);
+
+    // Handle messages
+    socket.on('sendMessage', (data) => {
+        try {
+            socket.join(data.groupId)
+            io.to(data.groupId).emit('receiveMessage', data);
+            console.log(data);
+        } catch (error) {
+          console.error('Error occurred while emitting receiveMessage event:', error);
+        }
+      });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
+    });
+})

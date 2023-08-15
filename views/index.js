@@ -1,3 +1,6 @@
+
+
+
 var msg=document.getElementById('msgField');
 var senBtn=document.getElementById('sendbtn');
 var msgarea=document.getElementById('msgarea');
@@ -17,6 +20,12 @@ const InviteEmail=document.getElementById('EmailInvite');
 const EmailInviteCheck=document.getElementById('EmailInviteCheck');
 const grpTitle=document.getElementById('grpName');
 
+
+const socket=io.connect('http://localhost:3000')
+
+socket.on("receiveMessage", (data) => {
+    display();
+  });
 createInviteCancel.addEventListener('click',()=>{
     createInvite.style.display = 'none';
 })
@@ -53,14 +62,13 @@ async function showMembers(e) {
 
     // Populate the member list
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://52.201.83.163:3000/getgroupMembers`,{headers:{"Authorization":token},params:grp});
-    console.log(res.data.cuid)
+    const res = await axios.get(`http://localhost:3000/getgroupMembers`,{headers:{"Authorization":token},params:grp});
+    
     let isUserAdmin=true;
     for(let j=0;j<res.data.data.length;j++){
         console.log(res.data.cuid,res.data.data[j].userId,res.data.data[j].isAdmin,'true')
         if(res.data.cuid==res.data.data[j].userId && res.data.data[j].isAdmin!=true){
-            console.log(res.data.cuid==res.data.data[j].userId,res.data.data[j].isAdmin!=true)
-            console.log("User is Not Admin of the Group")
+            
             isUserAdmin=false
         }
     }
@@ -68,7 +76,7 @@ async function showMembers(e) {
         if(!isUserAdmin){
             const listItem = document.createElement('li');
             listItem.textContent = res.data.data[i].user.name;
-            console.log("Is Admin :",res.data.data[i].isAdmin)
+            
             if(res.data.data[i].isAdmin==true){
                 const isAdminLabel = document.createElement('span');
                 isAdminLabel.textContent = '(Admin)';
@@ -128,10 +136,10 @@ async function makeAdmin(e) {
     const userId = button.id;
     const groupId=button.getAttribute('groupId')
     // Logic to make the member an admin
-    console.log(userId,groupId);
     
-    const res= await axios.post('http://52.201.83.163:3000/makeAdmin',{userId:userId,groupId:groupId})
-    console.log(res);
+    
+    const res= await axios.post('http://localhost:3000/makeAdmin',{userId:userId,groupId:groupId})
+    
     membersModal.style.display = 'none';
 }
   
@@ -141,8 +149,8 @@ async function deleteMember(e) {
     const groupId=button.getAttribute('groupId')
     // Logic to delete the member
     console.log(userId,groupId)
-    const res= await axios.post('http://52.201.83.163:3000/deletegroupmember',{userId:userId,groupId:groupId})
-    console.log(res);
+    const res= await axios.post('http://localhost:3000/deletegroupmember',{userId:userId,groupId:groupId})
+    
     membersModal.style.display = 'none';
 }
 
@@ -161,7 +169,7 @@ function handleButtonClick(event) {
     groupN=button.textContent;
     grpTitle.innerText=button.textContent;
     grpTitle.style.margin='5px'
-    console.log("Is Group Admin :",isAdmin)
+    
     if(groupid!='null'){
         
         if(isAdmin=='true'){
@@ -186,15 +194,16 @@ function handleButtonClick(event) {
 
         
     }
+    display()
     loadFromLS()
-    console.log(`Clicked: Label = ${label}, ID = ${id}`);
+    
 }
 function sendInvite(e){
     e.preventDefault();
     const button = e.target;
     const id = button.id;
     createInvite.style.display = 'block';
-    console.log('Email Sent',id)
+    
 }
 
 createGroupSubmit.addEventListener('click', async() => {
@@ -205,7 +214,7 @@ createGroupSubmit.addEventListener('click', async() => {
         console.log('Group name:', groupName);
         // Close the moda
         const token = localStorage.getItem('token');
-        const res = await axios.post('http://52.201.83.163:3000/addgroup',{groupName:groupName},{headers:{"Authorization":token}});
+        const res = await axios.post('http://localhost:3000/addgroup',{groupName:groupName},{headers:{"Authorization":token}});
 
         createGroupModal.style.display = 'none';
         groupdisplay()
@@ -215,7 +224,7 @@ createGroupSubmit.addEventListener('click', async() => {
 
 createInviteSubmit.addEventListener('click',async()=>{
     console.log("Email :",InviteEmail.value," Group ID :",groupid)
-    const res = await axios.post('http://52.201.83.163:3000/addGroupUser',{userMail:InviteEmail.value,groupId:groupid});
+    const res = await axios.post('http://localhost:3000/addGroupUser',{userMail:InviteEmail.value,groupId:groupid});
     console.log(res)
     if(res.status==203){
         console.log(EmailInviteCheck.getElementsByTagName('p'))
@@ -260,24 +269,28 @@ msg.addEventListener("keydown", function(event) {
       event.preventDefault();
     }
   });
+display()
 async function sendMessage(e){
     e.preventDefault();
     console.log(msg.value)
     testmsg=msg.value;
     msg.value='';
+    myobj={
+        msg:testmsg,
+        groupid:groupid
+    }
     const token = localStorage.getItem('token');
-    const res = await axios.post('http://52.201.83.163:3000/addmsg',{msg:testmsg,groupid:groupid},{headers:{"Authorization":token}});
-    
+    const res = await axios.post('http://localhost:3000/addmsg',{msg:testmsg,groupid:groupid},{headers:{"Authorization":token}});
+    socket.emit("sendMessage",myobj);
     
     display();
 }
-display()
+
 groupdisplay()
 async function groupdisplay(){
     buttonListDiv.innerHTML='';
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://52.201.83.163:3000/getgroups`,{headers:{"Authorization":token}});
-    console.log(res.data)
+    const res = await axios.get(`http://localhost:3000/getgroups`,{headers:{"Authorization":token}});
     createGroupList(res.data)
 
 }
@@ -316,9 +329,9 @@ async function display(){
         const isScrolledToBottom = msgarea.scrollHeight - msgarea.scrollTop === msgarea.clientHeight;
 
         let existingMessages = JSON.parse(localStorage.getItem(groupN));
-        console.log(existingMessages)
+        
         if(existingMessages){
-            console.log("Last Message ID",existingMessages.chat[existingMessages.chat.length-1].id)
+            
             lastMessageId=existingMessages.chat[existingMessages.chat.length-1].id;
 
         }
@@ -326,19 +339,19 @@ async function display(){
         let grp={
             groupId:groupid
         }
-        const res = await axios.get(`http://52.201.83.163:3000/getmsg?lastMsgId=${lastMessageId}`,{headers:{"Authorization":token},params:grp});
+        const res = await axios.get(`http://localhost:3000/getmsg?lastMsgId=${lastMessageId}`,{headers:{"Authorization":token},params:grp});
         if(res.data.chat.length>0){
             
-            console.log("existing data",existingMessages)
+            
             if(existingMessages){
-                console.log("existing data inside if",existingMessages.chat)
+                
                 existingMessages.chat.push(...res.data.chat);
-                console.log("new Data",existingMessages.chat)
+                
 
             }else{
                 existingMessages=res.data
             }
-            console.log("outside if",existingMessages.chat)
+            
 
             // Add new messages to the existing array
             
@@ -353,7 +366,7 @@ async function display(){
     }
     fetchMessages()
     // Call the fetchMessages function every 1 second
-    const intervalId = setInterval(fetchMessages, 100000);
+    //const intervalId = setInterval(fetchMessages, 100000);
     
 }
 function showchat(obj){
@@ -385,7 +398,7 @@ function loadFromLS(){
 
     const obj= JSON.parse(localStorage.getItem(groupN))
     msgarea.innerText='';
-    console.log(obj)
+    
     if(obj){
         showchat(obj)
     }

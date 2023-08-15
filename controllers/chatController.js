@@ -14,7 +14,6 @@ exports.getchats=async(req,res,next)=>{
         attributes:['id','userName','message','userId'],
         where: { id: { [Op.gt]: lastMsgId },groupId:grpId}
     });
-    console.log(chat)
     res.json({chat:chat,cid:req.user.id})
 
 
