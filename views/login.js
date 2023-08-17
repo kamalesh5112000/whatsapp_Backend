@@ -18,7 +18,7 @@ async function submitForm(e){
         password:password.value
     }
     console.log(myobj)
-    const res = await axios.post('http://52.201.83.163:3000/login',myobj)
+    const res = await axios.post('http://localhost:3000/login',myobj)
     console.log(res)
     if (res.status==202){
         emailcheck.innerHTML="Email Doesn't Exits"

@@ -23,7 +23,7 @@ const EmailInviteCheck=document.getElementById('EmailInviteCheck');
 const grpTitle=document.getElementById('grpName');
 
 
-const socket=io.connect('http://52.201.83.163:3000')
+const socket=io.connect('http://localhost:3000')
 
 socket.on("receiveMessage", (data) => {
     display();
@@ -81,7 +81,7 @@ async function showMembers(e) {
 
     // Populate the member list
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://52.201.83.163:3000/getgroupMembers`,{headers:{"Authorization":token},params:grp});
+    const res = await axios.get(`http://localhost:3000/getgroupMembers`,{headers:{"Authorization":token},params:grp});
     
     let isUserAdmin=true;
     for(let j=0;j<res.data.data.length;j++){
@@ -157,7 +157,7 @@ async function makeAdmin(e) {
     // Logic to make the member an admin
     
     
-    const res= await axios.post('http://52.201.83.163:3000/makeAdmin',{userId:userId,groupId:groupId})
+    const res= await axios.post('http://localhost:3000/makeAdmin',{userId:userId,groupId:groupId})
     
     membersModal.style.display = 'none';
 }
@@ -168,7 +168,7 @@ async function deleteMember(e) {
     const groupId=button.getAttribute('groupId')
     // Logic to delete the member
     console.log(userId,groupId)
-    const res= await axios.post('http://52.201.83.163:3000/deletegroupmember',{userId:userId,groupId:groupId})
+    const res= await axios.post('http://localhost:3000/deletegroupmember',{userId:userId,groupId:groupId})
     
     membersModal.style.display = 'none';
 }
@@ -188,7 +188,6 @@ function handleButtonClick(event) {
     groupN=button.textContent;
     grpTitle.innerText=button.textContent;
     grpTitle.style.margin='5px'
-    
     if(groupid!='null'){
         
         if(isAdmin=='true'){
@@ -214,7 +213,8 @@ function handleButtonClick(event) {
         
     }
     display()
-    loadFromLS()
+    console.log(`Clicked: Label = ${label}, ID = ${id}`);
+    
     
 }
 function sendInvite(e){
@@ -233,7 +233,7 @@ createGroupSubmit.addEventListener('click', async() => {
         console.log('Group name:', groupName);
         // Close the moda
         const token = localStorage.getItem('token');
-        const res = await axios.post('http://52.201.83.163:3000/addgroup',{groupName:groupName},{headers:{"Authorization":token}});
+        const res = await axios.post('http://localhost:3000/addgroup',{groupName:groupName},{headers:{"Authorization":token}});
 
         createGroupModal.style.display = 'none';
         groupdisplay()
@@ -243,7 +243,7 @@ createGroupSubmit.addEventListener('click', async() => {
 
 createInviteSubmit.addEventListener('click',async()=>{
     console.log("Email :",InviteEmail.value," Group ID :",groupid)
-    const res = await axios.post('http://52.201.83.163:3000/addGroupUser',{userMail:InviteEmail.value,groupId:groupid});
+    const res = await axios.post('http://localhost:3000/addGroupUser',{userMail:InviteEmail.value,groupId:groupid});
     console.log(res)
     if(res.status==203){
         console.log(EmailInviteCheck.getElementsByTagName('p'))
@@ -273,6 +273,7 @@ createInviteSubmit.addEventListener('click',async()=>{
         ep.innerText="User already in the Group";
         EmailInviteCheck.appendChild(ep)
     }else{
+        alert("Member Added Successfully");
         createInvite.style.display = 'none';
         InviteEmail.value='';
 
@@ -305,19 +306,18 @@ async function sendMessage(e){
             const formData = new FormData();
             formData.append('myfile', selectedFile);
             formData.append('groupId', groupid);
-            const res = await axios.post('http://52.201.83.163:3000/sendfile',formData,{headers:{"Authorization":token}});
-            console.log(res)
-            display();
+            const res = await axios.post('http://localhost:3000/sendfile',formData,{headers:{"Authorization":token}});
+            selectedFile = null;
+
+            
         }else{
             
-            const res = await axios.post('http://52.201.83.163:3000/addmsg',myobj,{headers:{"Authorization":token}});
-            selectedFile = null;
+            const res = await axios.post('http://localhost:3000/addmsg',{msg:testmsg,groupid:groupid},{headers:{"Authorization":token}});
             
-            socket.emit("sendMessage",myobj);
-            
-            display();
 
         }
+        socket.emit("sendMessage",myobj);
+        
         
 
     }catch(err){
@@ -330,7 +330,7 @@ groupdisplay()
 async function groupdisplay(){
     buttonListDiv.innerHTML='';
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://52.201.83.163:3000/getgroups`,{headers:{"Authorization":token}});
+    const res = await axios.get(`http://localhost:3000/getgroups`,{headers:{"Authorization":token}});
     createGroupList(res.data)
 
 }
@@ -361,50 +361,50 @@ function createGroupList(obj){
 }
 
 async function display(){
+    
 
     const token = localStorage.getItem('token');
 
-    async function fetchMessages() {
-        let lastMessageId=undefined;
-        const isScrolledToBottom = msgarea.scrollHeight - msgarea.scrollTop === msgarea.clientHeight;
+    let lastMessageId=undefined;
+    const isScrolledToBottom = msgarea.scrollHeight - msgarea.scrollTop === msgarea.clientHeight;
 
-        let existingMessages = JSON.parse(localStorage.getItem(groupN));
+    let existingMessages = JSON.parse(localStorage.getItem(groupN));
+    console.log("Group Name :",groupN,existingMessages)
+    
+    if(existingMessages){
+        
+        lastMessageId=existingMessages.chat[existingMessages.chat.length-1].id;
+
+    }
+
+    let grp={
+        groupId:groupid
+    }
+    console.log(grp)
+    const res = await axios.get(`http://localhost:3000/getmsg?lastMsgId=${lastMessageId}`,{headers:{"Authorization":token},params:grp});
+    if(res.data.chat.length>0){
+        
         
         if(existingMessages){
             
-            lastMessageId=existingMessages.chat[existingMessages.chat.length-1].id;
-
-        }
-
-        let grp={
-            groupId:groupid
-        }
-        const res = await axios.get(`http://52.201.83.163:3000/getmsg?lastMsgId=${lastMessageId}`,{headers:{"Authorization":token},params:grp});
-        if(res.data.chat.length>0){
-            
-            
-            if(existingMessages){
-                
-                existingMessages.chat.push(...res.data.chat);
-                
-
-            }else{
-                existingMessages=res.data
-            }
+            existingMessages.chat.push(...res.data.chat);
             
 
-            // Add new messages to the existing array
-            
-            localStorage.setItem(groupN,JSON.stringify(existingMessages));
-            lastMessageId=res.data.chat[res.data.chat.length-1].id;
-            loadFromLS();
+        }else{
+            existingMessages=res.data
         }
-        if (isScrolledToBottom) {
-            msgarea.scrollTop = msgarea.scrollHeight;
-        }
+        
 
+        // Add new messages to the existing array
+        
+        localStorage.setItem(groupN,JSON.stringify(existingMessages));
+        lastMessageId=res.data.chat[res.data.chat.length-1].id;
+        loadFromLS();
     }
-    fetchMessages()
+    if (isScrolledToBottom) {
+        msgarea.scrollTop = msgarea.scrollHeight;
+    }
+    loadFromLS();
     // Call the fetchMessages function every 1 second
     //const intervalId = setInterval(fetchMessages, 100000);
     
@@ -471,6 +471,7 @@ function loadFromLS(){
 
     const obj= JSON.parse(localStorage.getItem(groupN))
     msgarea.innerText='';
+    console.log(obj)
     
     if(obj){
         showchat(obj)

@@ -4,6 +4,8 @@ const { Op } = require('sequelize');
 const sequelize=require('../database/database');
 const S3Services = require("../services/s3service");
 
+const cron = require('cron');
+
 exports.sendFile = async (req, res, next)=>{
     try{
         const file = req.file.buffer;
@@ -34,15 +36,28 @@ exports.sendFile = async (req, res, next)=>{
 exports.getchats=async(req,res,next)=>{
     const lastMsgId= req.query.lastMsgId;
     let grpId=req.query.groupId;
-    if(grpId==undefined){
-        grpId=null
+    console.log('Params Group Id',grpId)
+    if(grpId=='null'){
+        console.log("Null value")
+        const chat=await Chats.findAll({
+            attributes:['id','userName','message','userId'],
+            where: { id: { [Op.gt]: lastMsgId },groupId:null}
+        });
+        res.json({chat:chat,cid:req.user.id})
+
+    }else{
+        console.log("Not Null Value")
+        const chat=await Chats.findAll({
+            attributes:['id','userName','message','userId'],
+            where: { id: { [Op.gt]: lastMsgId },groupId:grpId}
+        });
+        res.json({chat:chat,cid:req.user.id})
+
     }
-    console.log('Params Grou Id',grpId)
-    const chat=await Chats.findAll({
-        attributes:['id','userName','message','userId'],
-        where: { id: { [Op.gt]: lastMsgId },groupId:grpId}
-    });
-    res.json({chat:chat,cid:req.user.id})
+    
+    
+    
+    
 
 
 }
@@ -63,7 +78,7 @@ exports.addChat=async (req,res,next)=>{
         
         
         
-        res.status(200).json(result)
+        res.status(200).json({success:true})
 
     }catch(err){
         console.log(err)
